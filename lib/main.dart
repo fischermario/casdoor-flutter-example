@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:casdoor_flutter_sdk/casdoor_flutter_sdk.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -57,8 +58,16 @@ class _MyAppState extends State<MyApp> {
       _btnActive = false;
     });
 
+    String platform = '';
+
     // Get platform information
-    final platform = await CasdoorFlutterSdkPlatform().getPlatformVersion();
+    // dart:io is not supporting on web
+    // that means Platform._operatingSystem is not working
+    if (kIsWeb) {
+      platform = 'web';
+    } else {
+      platform = await CasdoorFlutterSdkPlatform().getPlatformVersion();
+    }
     String callbackUri = _config.redirectUri;
     if (platform != 'web') {
       callbackUri = '${_config.callbackUrlScheme}://callback';
@@ -156,9 +165,16 @@ class _MyAppState extends State<MyApp> {
                   ),
                   DropdownButton<String>(
                     value: _selectedAuthType,
-                    onChanged: ((!Platform.isMacOS) &&
-                            (!Platform.isLinux) &&
-                            (!Platform.isWindows))
+                    onChanged: kIsWeb
+                      ? (String? newValue) {
+                          setState(() {
+                            _selectedAuthType = newValue!;
+                            _clearCache = false;
+                          });
+                        }
+                      : ((!Platform.isMacOS) &&
+                        (!Platform.isLinux) &&
+                        (!Platform.isWindows))
                         ? (String? newValue) {
                             setState(() {
                               _selectedAuthType = newValue!;
@@ -173,34 +189,35 @@ class _MyAppState extends State<MyApp> {
                           value: 'inapp', child: Text('Auth inside the app')),
                     ],
                   ),
-                  ((!Platform.isMacOS) && (!Platform.isLinux))
-                      ? Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Checkbox(
-                              value: _clearCache,
-                              onChanged: (bool? newValue) {
-                                setState(() {
-                                  _clearCache = newValue!;
-                                });
-                              },
-                            ),
-                            const Padding(
-                              padding: EdgeInsets.only(left: 5),
-                              child: Text('Clear cache on logout'),
-                            ),
-                          ],
-                        )
-                      : Container(),
+                  // dart:io is not supporting on web
+                  // that means Platform._operatingSystem is not working
+                  kIsWeb || (!Platform.isMacOS && !Platform.isLinux)
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Checkbox(
+                            value: _clearCache,
+                            onChanged: (bool? newValue) {
+                              setState(() {
+                                _clearCache = newValue!;
+                              });
+                            },
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 5),
+                            child: Text('Clear cache on logout'),
+                          ),
+                        ],
+                      )
+                    : Container(),
                   ElevatedButton(
                     onPressed: (_btnActive == true)
                         ? () => (_token == '') ? login(context) : logout()
                         : null,
                     style: ButtonStyle(
-                      padding: MaterialStateProperty.all<EdgeInsets>(
-                        const EdgeInsets.all(20),
-                      ),
-                      minimumSize: MaterialStateProperty.all<Size>(
+                      // MaterialStateProperty deprecated
+                      padding: WidgetStateProperty.all<EdgeInsets>(const EdgeInsets.all(20)),
+                      minimumSize: WidgetStateProperty.all<Size>(
                         const Size(200, 50),
                       ),
                     ),

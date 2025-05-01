@@ -79,9 +79,13 @@ On the Web platform an endpoint needs to be created that captures the callback U
 <p>Authentication is complete. If this does not happen automatically, please
 close the window.
 <script>
-  window.opener.postMessage({
-    'casdoor-auth': window.location.href
-  }, window.location.origin);
+  if (window.opener == null) {
+    localStorage.setItem('casdoor-auth', window.location.href);
+  } else {
+    window.opener.postMessage({
+      'casdoor-auth': window.location.href
+    }, window.location.origin);
+  };
   window.close();
 </script>
 
