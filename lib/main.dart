@@ -9,7 +9,7 @@ import 'dart:async';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   runApp(const MyApp());
 }
 
@@ -165,23 +165,15 @@ class _MyAppState extends State<MyApp> {
                   ),
                   DropdownButton<String>(
                     value: _selectedAuthType,
-                    onChanged: kIsWeb
-                      ? (String? newValue) {
-                          setState(() {
-                            _selectedAuthType = newValue!;
-                            _clearCache = false;
-                          });
-                        }
-                      : ((!Platform.isMacOS) &&
-                        (!Platform.isLinux) &&
-                        (!Platform.isWindows))
-                        ? (String? newValue) {
-                            setState(() {
-                              _selectedAuthType = newValue!;
-                              _clearCache = false;
-                            });
-                          }
-                        : null,
+                    onChanged:
+                        ((kIsWeb) || (Platform.isAndroid) || (Platform.isIOS))
+                            ? (String? newValue) {
+                                setState(() {
+                                  _selectedAuthType = newValue!;
+                                  _clearCache = false;
+                                });
+                              }
+                            : null,
                     items: const [
                       DropdownMenuItem(
                           value: 'window', child: Text('Auth in new window')),
@@ -191,32 +183,33 @@ class _MyAppState extends State<MyApp> {
                   ),
                   // dart:io is not supporting on web
                   // that means Platform._operatingSystem is not working
-                  kIsWeb || (!Platform.isMacOS && !Platform.isLinux)
-                    ? Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Checkbox(
-                            value: _clearCache,
-                            onChanged: (bool? newValue) {
-                              setState(() {
-                                _clearCache = newValue!;
-                              });
-                            },
-                          ),
-                          const Padding(
-                            padding: EdgeInsets.only(left: 5),
-                            child: Text('Clear cache on logout'),
-                          ),
-                        ],
-                      )
-                    : Container(),
+                  ((kIsWeb) || (!Platform.isLinux))
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Checkbox(
+                              value: _clearCache,
+                              onChanged: (bool? newValue) {
+                                setState(() {
+                                  _clearCache = newValue!;
+                                });
+                              },
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.only(left: 5),
+                              child: Text('Clear cache on logout'),
+                            ),
+                          ],
+                        )
+                      : Container(),
                   ElevatedButton(
                     onPressed: (_btnActive == true)
                         ? () => (_token == '') ? login(context) : logout()
                         : null,
                     style: ButtonStyle(
                       // MaterialStateProperty deprecated
-                      padding: WidgetStateProperty.all<EdgeInsets>(const EdgeInsets.all(20)),
+                      padding: WidgetStateProperty.all<EdgeInsets>(
+                          const EdgeInsets.all(20)),
                       minimumSize: WidgetStateProperty.all<Size>(
                         const Size(200, 50),
                       ),
